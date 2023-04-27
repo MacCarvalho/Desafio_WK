@@ -38,25 +38,44 @@ uses UConexao, uClientes;
 procedure TPedidoController.ApagarPedido(CodigoPedido: Integer);
 var
   query: TFDQuery;
+  FTransacao: TFDTransaction;
 begin
+
+  FTransacao := TFDTransaction.Create(nil);
+  FTransacao.Connection := dmConexao.Conexao;
+  FTransacao.StartTransaction;
   query := TFDQuery.Create(nil);
   try
     query.Connection := dmConexao.Conexao;
     query.SQL.Text := 'delete from pedidos_produtos ' +
       'where pedidos_codigo = :Codigo;' +
       ' delete from pedidos where codigo = :Codigo ';
-      query.ParamByName('Codigo').Value := CodigoPedido;
+    query.ParamByName('Codigo').Value := CodigoPedido;
     query.ExecSQL;
-  finally
-    query.Free;
+    FTransacao.Commit;
+  except
+    on E: Exception do
+    begin
+      FTransacao.Rollback;
+    end;
+
   end;
+  query.Free;
+  FTransacao.Free;
+
 end;
 
 function TPedidoController.CarregarPedido(CodigoPedido: Integer;
   CDS: TClientDataSet): boolean;
 var
   query: TFDQuery;
+  FTransacao: TFDTransaction;
 begin
+
+  FTransacao := TFDTransaction.Create(nil);
+  FTransacao.Connection := dmConexao.Conexao;
+  FTransacao.StartTransaction;
+
   query := TFDQuery.Create(nil);
   try
     query.Connection := dmConexao.Conexao;
@@ -100,6 +119,7 @@ begin
           query.Next;
         end;
 
+        FTransacao.Commit;
         result := true;
       end;
 
@@ -108,9 +128,18 @@ begin
     begin
       result := false;
     end;
-  finally
-    query.Free;
+
+  except
+    on E: Exception do
+    begin
+      FTransacao.Rollback;
+    end;
+
   end;
+
+  FTransacao.Free;
+  query.Free;
+
 end;
 
 function TPedidoController.GetCliente: string;
@@ -134,7 +163,12 @@ var
   query: TFDQuery;
   IDRetorno: Integer;
   SQL: String;
+  FTransacao: TFDTransaction;
 begin
+
+  FTransacao := TFDTransaction.Create(nil);
+  FTransacao.Connection := dmConexao.Conexao;
+  FTransacao.StartTransaction;
   query := TFDQuery.Create(nil);
   try
     query.Connection := dmConexao.Conexao;
@@ -165,9 +199,16 @@ begin
       query.ExecSQL;
       CDS.Next;
     end;
-  finally
-    query.Free;
+  except
+    on E: Exception do
+    begin
+      FTransacao.Rollback;
+    end;
+
   end;
+
+  query.Free;
+  FTransacao.Free;
 end;
 
 end.

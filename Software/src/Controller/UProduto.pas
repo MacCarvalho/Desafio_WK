@@ -113,6 +113,7 @@ begin
     FPreco := FQuery.FieldByName('preco').Value;
     FCodigo := FQuery.FieldByName('codigo').AsInteger;
   end;
+
 end;
 
 function TProduto.SomaClientDataset(CDS: TClientDataSet): double;

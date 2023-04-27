@@ -94,6 +94,7 @@ object frmPedido: TfrmPedido
       MaxLength = 10
       TabOrder = 1
       Text = '  /  /    '
+      OnKeyPress = editDataKeyPress
       ExplicitLeft = 773
       ExplicitHeight = 23
     end
@@ -158,6 +159,7 @@ object frmPedido: TfrmPedido
       Alignment = taCenter
       TabOrder = 2
       Text = '0'
+      OnKeyPress = EdtValorKeyPress
       ExplicitLeft = 735
       ExplicitHeight = 23
     end
@@ -173,6 +175,7 @@ object frmPedido: TfrmPedido
       TabOrder = 1
       Text = '1'
       OnKeyDown = EdtQuantidadeKeyDown
+      OnKeyPress = EdtQuantidadeKeyPress
       ExplicitLeft = 654
       ExplicitHeight = 23
     end
@@ -217,7 +220,7 @@ object frmPedido: TfrmPedido
       900
       69)
     object LabelTotal: TLabel
-      Left = 832
+      Left = 828
       Top = 16
       Width = 57
       Height = 37
