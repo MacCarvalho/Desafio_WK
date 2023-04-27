@@ -54,6 +54,9 @@ type
     procedure buttonApagarPedidoClick(Sender: TObject);
     procedure GridProdutosKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure EdtQuantidadeKeyPress(Sender: TObject; var Key: Char);
+    procedure editDataKeyPress(Sender: TObject; var Key: Char);
+    procedure EdtValorKeyPress(Sender: TObject; var Key: Char);
   private
     { Private declarations }
   public
@@ -92,7 +95,8 @@ begin
   try
     Produto.AdicionarCDS(edtProduto.Tag, StrToInt(EdtQuantidade.Text),
       edtProduto.Text, StrToCurr(EdtValor.Text), cdsProdutos);
-    LabelTotal.Caption :=  FormatCurr('#,##0.00', Produto.SomaClientDataset(cdsProdutos)) ;
+    LabelTotal.Caption := 'R$ ' + FormatCurr('#,##0.00',
+      Produto.SomaClientDataset(cdsProdutos));
   finally
     Produto.Free;
     EdtQuantidade.Text := '1';
@@ -104,16 +108,16 @@ end;
 
 procedure TfrmPedido.ApagarPedido;
 var
-Pedido : TPedidoController;
+  Pedido: TPedidoController;
 begin
- if MessageDlg('Deseja realamente apagar o pedido?', mtConfirmation, [mbYes, mbNo], 0) = mrYes
-    then
-    begin
+  if MessageDlg('Deseja realamente apagar o pedido?', mtConfirmation,
+    [mbYes, mbNo], 0) = mrYes then
+  begin
     Pedido := TPedidoController.Create;
-    Pedido.ApagarPedido(strtoint(edtIDPedido.Text));
+    Pedido.ApagarPedido(StrToInt(edtIDPedido.Text));
     showmessage('Pedido apagado com sucesso');
 
-    end
+  end
 end;
 
 procedure TfrmPedido.ApagarProduto;
@@ -130,7 +134,8 @@ begin
   Produto := TProduto.Create;
   try
     Produto.AtualizaValorTotal(cdsProdutos);
-
+    LabelTotal.Caption := 'R$ ' + FormatCurr('#,##0.00',
+      Produto.SomaClientDataset(cdsProdutos));
   finally
 
     Produto.Free;
@@ -167,13 +172,13 @@ end;
 
 procedure TfrmPedido.ButtonLocalizarPedidoClick(Sender: TObject);
 begin
-CarregaPedido;
+  CarregaPedido;
 end;
 
 procedure TfrmPedido.CarregaPedido;
 var
   Produto: TProduto;
-  Pedido : TPedidoController;
+  Pedido: TPedidoController;
 begin
   if cdsProdutos.Active = false then
   begin
@@ -183,19 +188,21 @@ begin
   Produto := TProduto.Create;
   Pedido := TPedidoController.Create;
   try
-    if pedido.CarregarPedido(strtoint(edtIDPedido.Text), cdsProdutos) then
+    if Pedido.CarregarPedido(StrToInt(edtIDPedido.Text), cdsProdutos) then
     begin
-    LabelTotal.Caption :=  FormatCurr('#,##0.00', Produto.SomaClientDataset(cdsProdutos)) ;
-    cbxCliente.Text := pedido.Cliente;
-    editData.Text := Pedido.Data;
-    end else
+      LabelTotal.Caption := 'R$ ' + FormatCurr('#,##0.00',
+        Produto.SomaClientDataset(cdsProdutos));
+      cbxCliente.Text := Pedido.Cliente;
+      editData.Text := Pedido.Data;
+    end
+    else
     begin
       showmessage('Pedido não encontrado');
     end;
 
   finally
     Produto.Free;
-    pedido.Free;
+    Pedido.Free;
 
   end;
 
@@ -206,6 +213,15 @@ procedure TfrmPedido.cbxClienteKeyDown(Sender: TObject; var Key: Word;
 begin
   if Key = VK_RETURN then
     PesquisaClienteNome;
+end;
+
+procedure TfrmPedido.editDataKeyPress(Sender: TObject; var Key: Char);
+begin
+  if not(Key in ['0' .. '9', #8, #9]) then
+  begin
+    Key := #0;
+  end;
+
 end;
 
 procedure TfrmPedido.edtProdutoKeyDown(Sender: TObject; var Key: Word;
@@ -227,18 +243,35 @@ begin
   end;
 end;
 
+procedure TfrmPedido.EdtQuantidadeKeyPress(Sender: TObject; var Key: Char);
+begin
+  if not(Key in ['0' .. '9', #8, #9]) then
+  begin
+    Key := #0;
+  end;
+
+end;
+
+procedure TfrmPedido.EdtValorKeyPress(Sender: TObject; var Key: Char);
+begin
+  if not(Key in ['0' .. '9', #13, #44, #8]) then
+  begin
+    Key := #0;
+  end;
+end;
+
 procedure TfrmPedido.GridProdutosKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-  if (key = VK_DELETE) then
+  if (Key = VK_DELETE) then
+  begin
+    if MessageDlg('Deseja realamente apagar o produto?', mtConfirmation,
+      [mbYes, mbNo], 0) = mrYes then
     begin
-      if MessageDlg('Deseja realamente apagar o produto?', mtConfirmation, [mbYes, mbNo], 0) = mrYes
-    then
-    begin
-    ApagarProduto;
-    showmessage('Produto apagado com sucesso');
+      ApagarProduto;
+      showmessage('Produto apagado com sucesso');
     end
-    end;
+  end;
 end;
 
 procedure TfrmPedido.InserirDados;
@@ -250,8 +283,9 @@ begin
   Produto := TProduto.Create;
   try
     PedidoController.InserirPedido
-      (Integer(cbxCliente.Items.Objects[cbxCliente.ItemIndex]), StrToDate(editData.Text),
-      Produto.SomaClientDataset(cdsProdutos), cdsProdutos);
+      (Integer(cbxCliente.Items.Objects[cbxCliente.ItemIndex]),
+      StrToDate(editData.Text), Produto.SomaClientDataset(cdsProdutos),
+      cdsProdutos);
 
   finally
     PedidoController.Free;
@@ -261,12 +295,10 @@ begin
   end;
 end;
 
-
-
 procedure TfrmPedido.PesquisaClienteNome;
 var
   clientes: TList<TCliente>;
-  cliente: TCliente;
+  Cliente: TCliente;
 begin
   // Verifica se o texto de pesquisa tem mais de 2 caracteres
   if Length(cbxCliente.Text) >= 2 then
@@ -278,8 +310,8 @@ begin
       cbxCliente.Items.Clear;
 
       // Adiciona os novos itens ao ComboBox
-      for cliente in clientes do
-        cbxCliente.Items.AddObject(cliente.Nome, TObject(cliente.Codigo));
+      for Cliente in clientes do
+        cbxCliente.Items.AddObject(Cliente.Nome, TObject(Cliente.Codigo));
     finally
       clientes.Free;
       cbxCliente.DroppedDown := true;
@@ -305,7 +337,7 @@ begin
       edtProduto.Tag := Produto.Codigo;
     end
     else
-      ShowMessage('Produto não encontrado');
+      showmessage('Produto não encontrado');
   finally
     Produto.Free;
   end;

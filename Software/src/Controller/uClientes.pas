@@ -33,7 +33,13 @@ uses UConexao;
 function TClientes.BuscarClientesPorNome(const ANome: string): TList<TCliente>;
 var
   qryClientes: TFDQuery;
+  FTransacao: TFDTransaction;
 begin
+
+  FTransacao := TFDTransaction.Create(nil);
+  FTransacao.Connection := dmConexao.Conexao;
+
+  FTransacao.StartTransaction;
   Result := TList<TCliente>.Create;
   qryClientes := TFDQuery.Create(nil);
   try
@@ -50,9 +56,18 @@ begin
         qryClientes.FieldByName('nome').AsString));
       qryClientes.Next;
     end;
-  finally
-    qryClientes.Free;
+    FTransacao.Commit;
+  except
+    on E: Exception do
+    begin
+      FTransacao.Rollback;
+    end;
+
   end;
+
+  qryClientes.Free;
+  FTransacao.Free;
+
 end;
 
 { TCliente }
